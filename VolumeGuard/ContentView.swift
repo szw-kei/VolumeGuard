@@ -5,133 +5,241 @@ struct ContentView: View {
     @StateObject private var volumeObserver = VolumeObserver()
 
     var body: some View {
+        ZStack {
+            backgroundView
 
-        VStack(spacing: 28) {
+            ScrollView {
+                VStack(spacing: 24) {
+                    headerView
+                    currentVolumeCard
 
+                    if volumeObserver.isLimitEnabled {
+                        activeLimitCard
+                    } else {
+                        inactiveLimitCard
+                    }
+
+                    SystemVolumeView(
+                        controller: volumeObserver.volumeController
+                    )
+                    .frame(width: 1, height: 1)
+                    .opacity(0.01)
+                    .allowsHitTesting(false)
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 32)
+            }
+        }
+    }
+
+    private var backgroundView: some View {
+        LinearGradient(
+            colors: [
+                Color(.systemBackground),
+                Color(.secondarySystemBackground)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .ignoresSafeArea()
+    }
+
+    private var headerView: some View {
+        VStack(spacing: 10) {
             Image(
                 systemName: volumeObserver.isLimitEnabled
                     ? "lock.shield.fill"
                     : "speaker.wave.2.fill"
             )
-            .font(.system(size: 64))
+            .font(.system(size: 54, weight: .semibold))
+            .foregroundStyle(
+                volumeObserver.isLimitEnabled
+                    ? .green
+                    : .blue
+            )
 
             Text("VolumeGuard")
-                .font(.largeTitle)
-                .bold()
+                .font(.system(size: 34, weight: .bold, design: .rounded))
 
-            VStack(spacing: 8) {
+            Text(
+                volumeObserver.isLimitEnabled
+                    ? "音量制限が有効です"
+                    : "最大音量を設定してください"
+            )
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        }
+    }
 
-                Text("現在の音量")
+    private var currentVolumeCard: some View {
+        VStack(spacing: 10) {
+            Text("現在の音量")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
 
-                Text("\(Int(volumeObserver.volume * 100))%")
-                    .font(
-                        .system(
-                            size: 48,
-                            weight: .bold,
-                            design: .rounded
-                        )
+            Text("\(Int(volumeObserver.volume * 100))%")
+                .font(
+                    .system(
+                        size: 56,
+                        weight: .bold,
+                        design: .rounded
                     )
-            }
+                )
 
-            VStack(spacing: 12) {
+            ProgressView(
+                value: Double(volumeObserver.volume),
+                total: 1.0
+            )
+            .progressViewStyle(.linear)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 24)
+                .fill(Color(.secondarySystemBackground))
+        )
+    }
+
+    private var inactiveLimitCard: some View {
+        VStack(spacing: 22) {
+            VStack(spacing: 10) {
+                Text("音量上限")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
 
                 Text(
-                    "音量上限：\(Int(volumeObserver.maximumVolume * 100))%"
+                    "\(Int(volumeObserver.maximumVolume * 100))%"
                 )
-                .font(.title3)
-                .bold()
-
-                Slider(
-                    value: Binding(
-                        get: {
-                            Double(
-                                volumeObserver.maximumVolume
-                            )
-                        },
-                        set: {
-                            volumeObserver.setMaximumVolume(
-                                Float($0)
-                            )
-                        }
-                    ),
-                    in: 0.01...0.50,
-                    step: 0.01
-                )
-                .disabled(volumeObserver.isLimitEnabled)
-
-                if volumeObserver.isLimitEnabled {
-
-                    Label(
-                        "制限中は変更できません",
-                        systemImage: "lock.fill"
+                .font(
+                    .system(
+                        size: 42,
+                        weight: .bold,
+                        design: .rounded
                     )
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
+                )
             }
 
-            if volumeObserver.isLimitEnabled {
-
-                VStack(spacing: 12) {
-
-                    Label(
-                        "音量制限中",
-                        systemImage: "checkmark.shield.fill"
-                    )
-                    .font(.headline)
-                    .foregroundStyle(.green)
-
-                    Text("3秒長押しで制限を解除")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .font(.headline)
-                        .foregroundStyle(.red)
-                        .background(
-                            RoundedRectangle(
-                                cornerRadius: 12
-                            )
-                            .stroke(
-                                Color.red,
-                                lineWidth: 2
-                            )
+            Slider(
+                value: Binding(
+                    get: {
+                        Double(volumeObserver.maximumVolume)
+                    },
+                    set: {
+                        volumeObserver.setMaximumVolume(
+                            Float($0)
                         )
-                        .contentShape(Rectangle())
-                        .onLongPressGesture(
-                            minimumDuration: 3.0
-                        ) {
-                            volumeObserver.disableLimit()
-                        }
+                    }
+                ),
+                in: 0.01...0.50,
+                step: 0.01
+            )
 
-                    Text(
-                        "お子様が使用中は、この画面を操作しても簡単には解除されません。"
-                    )
-                    .font(.caption)
-                    .multilineTextAlignment(.center)
+            HStack {
+                Text("1%")
+                Spacer()
+                Text("50%")
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+
+            Button {
+                volumeObserver.enableLimit()
+            } label: {
+                Label(
+                    "音量制限を開始",
+                    systemImage: "shield.checkered"
+                )
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+
+            Text(
+                "制限を開始すると、解除するまで音量上限を変更できません。"
+            )
+            .font(.caption)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(.secondary)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 24)
+                .fill(Color(.secondarySystemBackground))
+        )
+    }
+
+    private var activeLimitCard: some View {
+        VStack(spacing: 20) {
+            Label(
+                "音量制限中",
+                systemImage: "checkmark.shield.fill"
+            )
+            .font(.headline)
+            .foregroundStyle(.green)
+
+            VStack(spacing: 6) {
+                Text("設定中の音量上限")
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
-                }
 
-            } else {
-
-                Button {
-                    volumeObserver.enableLimit()
-                } label: {
-
-                    Text("音量制限を開始")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .font(.headline)
-                }
-                .buttonStyle(.borderedProminent)
+                Text(
+                    "\(Int(volumeObserver.maximumVolume * 100))%"
+                )
+                .font(
+                    .system(
+                        size: 48,
+                        weight: .bold,
+                        design: .rounded
+                    )
+                )
             }
 
-            SystemVolumeView(
-                controller: volumeObserver.volumeController
+            Divider()
+
+            Label(
+                "設定はロックされています",
+                systemImage: "lock.fill"
             )
-            .frame(width: 1, height: 1)
-            .opacity(0.01)
-            .allowsHitTesting(false)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+
+            Text("3秒長押しで音量制限を解除")
+                .font(.headline)
+                .foregroundStyle(.red)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(
+                            Color.red,
+                            lineWidth: 2
+                        )
+                )
+                .contentShape(Rectangle())
+                .onLongPressGesture(
+                    minimumDuration: 3.0
+                ) {
+                    volumeObserver.disableLimit()
+                }
+
+            Text(
+                "VolumeGuardを閉じても、YouTubeや音楽アプリを使用しながら音量制限を継続できます。"
+            )
+            .font(.caption)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(.secondary)
         }
-        .padding(30)
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 24)
+                .fill(Color(.secondarySystemBackground))
+        )
     }
 }
 
