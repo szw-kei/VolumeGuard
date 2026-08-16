@@ -9,15 +9,16 @@ struct ContentView: View {
             backgroundView
 
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 16) {
                     headerView
-                    currentVolumeCard
 
                     if volumeObserver.isLimitEnabled {
                         activeLimitCard
                     } else {
                         inactiveLimitCard
                     }
+
+                    currentVolumeCard
 
                     SystemVolumeView(
                         controller: volumeObserver.volumeController
@@ -26,8 +27,9 @@ struct ContentView: View {
                     .opacity(0.01)
                     .allowsHitTesting(false)
                 }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 32)
+                .padding(.horizontal, 18)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
             }
         }
     }
@@ -45,80 +47,69 @@ struct ContentView: View {
     }
 
     private var headerView: some View {
-        VStack(spacing: 10) {
+        HStack(spacing: 12) {
             Image(
                 systemName: volumeObserver.isLimitEnabled
                     ? "lock.shield.fill"
                     : "speaker.wave.2.fill"
             )
-            .font(.system(size: 54, weight: .semibold))
+            .font(.system(size: 34, weight: .semibold))
             .foregroundStyle(
                 volumeObserver.isLimitEnabled
                     ? .green
                     : .blue
             )
 
-            Text("VolumeGuard")
-                .font(.system(size: 34, weight: .bold, design: .rounded))
-
-            Text(
-                volumeObserver.isLimitEnabled
-                    ? "音量制限が有効です"
-                    : "最大音量を設定してください"
-            )
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-        }
-    }
-
-    private var currentVolumeCard: some View {
-        VStack(spacing: 10) {
-            Text("現在の音量")
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundStyle(.secondary)
-
-            Text("\(Int(volumeObserver.volume * 100))%")
-                .font(
-                    .system(
-                        size: 56,
-                        weight: .bold,
-                        design: .rounded
+            VStack(alignment: .leading, spacing: 2) {
+                Text("VolumeGuard")
+                    .font(
+                        .system(
+                            size: 27,
+                            weight: .bold,
+                            design: .rounded
+                        )
                     )
-                )
 
-            ProgressView(
-                value: Double(volumeObserver.volume),
-                total: 1.0
-            )
-            .progressViewStyle(.linear)
+                Text(
+                    volumeObserver.isLimitEnabled
+                        ? "音量制限が有効です"
+                        : "最大音量を設定してください"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+
+            Spacer()
         }
-        .padding(24)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 24)
-                .fill(Color(.secondarySystemBackground))
-        )
     }
 
     private var inactiveLimitCard: some View {
-        VStack(spacing: 22) {
-            VStack(spacing: 10) {
-                Text("音量上限")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.secondary)
+        VStack(spacing: 14) {
 
-                Text(
-                    "\(Int(volumeObserver.maximumVolume * 100))%"
-                )
-                .font(
-                    .system(
-                        size: 42,
-                        weight: .bold,
-                        design: .rounded
+            HStack {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("音量上限")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
+
+                    Text(
+                        "\(Int(volumeObserver.maximumVolume * 100))%"
                     )
-                )
+                    .font(
+                        .system(
+                            size: 38,
+                            weight: .bold,
+                            design: .rounded
+                        )
+                    )
+                }
+
+                Spacer()
+
+                Image(systemName: "speaker.wave.2")
+                    .font(.system(size: 30))
+                    .foregroundStyle(.secondary)
             }
 
             Slider(
@@ -141,7 +132,7 @@ struct ContentView: View {
                 Spacer()
                 Text("50%")
             }
-            .font(.caption)
+            .font(.caption2)
             .foregroundStyle(.secondary)
 
             Button {
@@ -153,68 +144,58 @@ struct ContentView: View {
                 )
                 .font(.headline)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
+                .padding(.vertical, 13)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-
-            Text(
-                "制限を開始すると、解除するまで音量上限を変更できません。"
-            )
-            .font(.caption)
-            .multilineTextAlignment(.center)
-            .foregroundStyle(.secondary)
         }
-        .padding(24)
+        .padding(18)
         .frame(maxWidth: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: 24)
+            RoundedRectangle(cornerRadius: 20)
                 .fill(Color(.secondarySystemBackground))
         )
     }
 
     private var activeLimitCard: some View {
-        VStack(spacing: 20) {
-            Label(
-                "音量制限中",
-                systemImage: "checkmark.shield.fill"
-            )
-            .font(.headline)
-            .foregroundStyle(.green)
+        VStack(spacing: 14) {
 
-            VStack(spacing: 6) {
-                Text("設定中の音量上限")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+            HStack {
+                Label(
+                    "音量制限中",
+                    systemImage: "checkmark.shield.fill"
+                )
+                .font(.headline)
+                .foregroundStyle(.green)
+
+                Spacer()
 
                 Text(
                     "\(Int(volumeObserver.maximumVolume * 100))%"
                 )
                 .font(
                     .system(
-                        size: 48,
+                        size: 34,
                         weight: .bold,
                         design: .rounded
                     )
                 )
             }
 
-            Divider()
-
             Label(
                 "設定はロックされています",
                 systemImage: "lock.fill"
             )
-            .font(.subheadline)
+            .font(.caption)
             .foregroundStyle(.secondary)
 
             Text("3秒長押しで音量制限を解除")
                 .font(.headline)
                 .foregroundStyle(.red)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
+                .padding(.vertical, 13)
                 .background(
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: 14)
                         .stroke(
                             Color.red,
                             lineWidth: 2
@@ -226,18 +207,48 @@ struct ContentView: View {
                 ) {
                     volumeObserver.disableLimit()
                 }
-
-            Text(
-                "VolumeGuardを閉じても、YouTubeや音楽アプリを使用しながら音量制限を継続できます。"
-            )
-            .font(.caption)
-            .multilineTextAlignment(.center)
-            .foregroundStyle(.secondary)
         }
-        .padding(24)
+        .padding(18)
         .frame(maxWidth: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: 24)
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(.secondarySystemBackground))
+        )
+    }
+
+    private var currentVolumeCard: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("現在の音量")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+
+                Text(
+                    "\(Int(volumeObserver.volume * 100))%"
+                )
+                .font(
+                    .system(
+                        size: 34,
+                        weight: .bold,
+                        design: .rounded
+                    )
+                )
+            }
+
+            Spacer()
+
+            ProgressView(
+                value: Double(volumeObserver.volume),
+                total: 1.0
+            )
+            .progressViewStyle(.linear)
+            .frame(width: 110)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
                 .fill(Color(.secondarySystemBackground))
         )
     }
