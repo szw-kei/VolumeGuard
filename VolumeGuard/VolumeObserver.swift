@@ -11,13 +11,20 @@ final class VolumeObserver: NSObject, ObservableObject {
 
     let volumeController = VolumeController()
 
-    private let audioSession = AVAudioSession.sharedInstance()
-    private let backgroundAudioKeeper = BackgroundAudioKeeper()
+    private let audioSession =
+        AVAudioSession.sharedInstance()
 
-    private var observation: NSKeyValueObservation?
-    private var correctionTask: Task<Void, Never>?
+    private let backgroundAudioKeeper =
+        BackgroundAudioKeeper()
 
-    private let maximumVolumeKey = "maximumVolume"
+    private var observation:
+        NSKeyValueObservation?
+
+    private var correctionTask:
+        Task<Void, Never>?
+
+    private let maximumVolumeKey =
+        "maximumVolume"
 
     override init() {
 
@@ -26,9 +33,10 @@ final class VolumeObserver: NSObject, ObservableObject {
             forKey: maximumVolumeKey
         ) != nil {
 
-            maximumVolume = UserDefaults.standard.float(
-                forKey: maximumVolumeKey
-            )
+            maximumVolume =
+                UserDefaults.standard.float(
+                    forKey: maximumVolumeKey
+                )
 
         } else {
 
@@ -40,29 +48,39 @@ final class VolumeObserver: NSObject, ObservableObject {
 
         configureAudioSession()
 
-        volume = audioSession.outputVolume
+        volume =
+            audioSession.outputVolume
 
-        observation = audioSession.observe(
-            \.outputVolume,
-            options: [.initial, .new]
-        ) { [weak self] _, change in
+        observation =
+            audioSession.observe(
+                \.outputVolume,
+                options: [.initial, .new]
+            ) { [weak self] _, change in
 
-            guard let newVolume = change.newValue else {
-                return
+                guard let newVolume =
+                        change.newValue
+                else {
+                    return
+                }
+
+                guard let observer = self
+                else {
+                    return
+                }
+
+                Task { @MainActor in
+
+                    observer.handleVolumeChange(
+                        newVolume
+                    )
+                }
             }
-
-            guard let observer = self else {
-                return
-            }
-
-            Task { @MainActor in
-                observer.handleVolumeChange(newVolume)
-            }
-        }
     }
 
     private func configureAudioSession() {
+
         do {
+
             try audioSession.setCategory(
                 .playback,
                 mode: .default,
@@ -72,6 +90,7 @@ final class VolumeObserver: NSObject, ObservableObject {
             try audioSession.setActive(true)
 
         } catch {
+
             print(
                 "AudioSession setup failed:",
                 error
@@ -82,6 +101,7 @@ final class VolumeObserver: NSObject, ObservableObject {
     private func handleVolumeChange(
         _ newVolume: Float
     ) {
+
         volume = newVolume
 
         guard isLimitEnabled else {
@@ -96,10 +116,10 @@ final class VolumeObserver: NSObject, ObservableObject {
     }
 
     private func startCorrection() {
+
         correctionTask?.cancel()
 
-        correctionTask = Task {
-            [weak self] in
+        correctionTask = Task { [weak self] in
 
             guard let self else {
                 return
@@ -130,6 +150,7 @@ final class VolumeObserver: NSObject, ObservableObject {
     }
 
     private func enforceMaximumVolume() {
+
         guard isLimitEnabled else {
             return
         }
@@ -140,20 +161,24 @@ final class VolumeObserver: NSObject, ObservableObject {
         volume = actualVolume
 
         if actualVolume > maximumVolume {
+
             volumeController.setSystemVolume(
                 maximumVolume
             )
         }
     }
 
-    func setMaximumVolume(_ newValue: Float) {
+    func setMaximumVolume(
+        _ newValue: Float
+    ) {
 
         let clampedValue = min(
             max(newValue, 0.01),
-            0.50
+            0.90
         )
 
-        maximumVolume = clampedValue
+        maximumVolume =
+            clampedValue
 
         UserDefaults.standard.set(
             clampedValue,
@@ -162,13 +187,15 @@ final class VolumeObserver: NSObject, ObservableObject {
 
         // 制限中に上限を下げた場合は即座に反映
         if isLimitEnabled &&
-            audioSession.outputVolume > maximumVolume {
+            audioSession.outputVolume
+                > maximumVolume {
 
             startCorrection()
         }
     }
 
     func enableLimit() {
+
         isLimitEnabled = true
 
         backgroundAudioKeeper.start()
@@ -181,6 +208,7 @@ final class VolumeObserver: NSObject, ObservableObject {
     }
 
     func disableLimit() {
+
         isLimitEnabled = false
 
         correctionTask?.cancel()
@@ -190,7 +218,9 @@ final class VolumeObserver: NSObject, ObservableObject {
     }
 
     deinit {
+
         observation?.invalidate()
+
         correctionTask?.cancel()
     }
 }

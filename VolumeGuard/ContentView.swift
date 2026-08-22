@@ -5,16 +5,23 @@ struct ContentView: View {
     @StateObject private var volumeObserver = VolumeObserver()
 
     var body: some View {
+
         ZStack {
+
             backgroundView
 
             ScrollView {
+
                 VStack(spacing: 16) {
+
                     headerView
 
                     if volumeObserver.isLimitEnabled {
+
                         activeLimitCard
+
                     } else {
+
                         inactiveLimitCard
                     }
 
@@ -27,6 +34,7 @@ struct ContentView: View {
                     .opacity(0.01)
                     .allowsHitTesting(false)
                 }
+
                 .padding(.horizontal, 18)
                 .padding(.top, 16)
                 .padding(.bottom, 24)
@@ -35,6 +43,7 @@ struct ContentView: View {
     }
 
     private var backgroundView: some View {
+
         LinearGradient(
             colors: [
                 Color(.systemBackground),
@@ -47,7 +56,9 @@ struct ContentView: View {
     }
 
     private var headerView: some View {
+
         HStack(spacing: 12) {
+
             Image(
                 systemName: volumeObserver.isLimitEnabled
                     ? "lock.shield.fill"
@@ -60,7 +71,11 @@ struct ContentView: View {
                     : .blue
             )
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(
+                alignment: .leading,
+                spacing: 2
+            ) {
+
                 Text("VolumeGuard")
                     .font(
                         .system(
@@ -84,10 +99,16 @@ struct ContentView: View {
     }
 
     private var inactiveLimitCard: some View {
+
         VStack(spacing: 14) {
 
             HStack {
-                VStack(alignment: .leading, spacing: 3) {
+
+                VStack(
+                    alignment: .leading,
+                    spacing: 3
+                ) {
+
                     Text("音量上限")
                         .font(.caption)
                         .fontWeight(.semibold)
@@ -115,7 +136,9 @@ struct ContentView: View {
             Slider(
                 value: Binding(
                     get: {
-                        Double(volumeObserver.maximumVolume)
+                        Double(
+                            volumeObserver.maximumVolume
+                        )
                     },
                     set: {
                         volumeObserver.setMaximumVolume(
@@ -123,21 +146,27 @@ struct ContentView: View {
                         )
                     }
                 ),
-                in: 0.01...0.50,
+                in: 0.01...0.90,
                 step: 0.01
             )
 
             HStack {
+
                 Text("1%")
+
                 Spacer()
-                Text("50%")
+
+                Text("90%")
             }
             .font(.caption2)
             .foregroundStyle(.secondary)
 
             Button {
+
                 volumeObserver.enableLimit()
+
             } label: {
+
                 Label(
                     "音量制限を開始",
                     systemImage: "shield.checkered"
@@ -153,14 +182,18 @@ struct ContentView: View {
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.secondarySystemBackground))
+                .fill(
+                    Color(.secondarySystemBackground)
+                )
         )
     }
 
     private var activeLimitCard: some View {
+
         VStack(spacing: 14) {
 
             HStack {
+
                 Label(
                     "音量制限中",
                     systemImage: "checkmark.shield.fill"
@@ -212,13 +245,21 @@ struct ContentView: View {
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.secondarySystemBackground))
+                .fill(
+                    Color(.secondarySystemBackground)
+                )
         )
     }
 
     private var currentVolumeCard: some View {
+
         HStack {
-            VStack(alignment: .leading, spacing: 4) {
+
+            VStack(
+                alignment: .leading,
+                spacing: 4
+            ) {
+
                 Text("現在の音量")
                     .font(.caption)
                     .fontWeight(.semibold)
@@ -249,11 +290,14 @@ struct ContentView: View {
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.secondarySystemBackground))
+                .fill(
+                    Color(.secondarySystemBackground)
+                )
         )
     }
 }
 
 #Preview {
+
     ContentView()
 }
